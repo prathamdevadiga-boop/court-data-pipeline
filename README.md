@@ -16,6 +16,7 @@ pip install -r requirements.txt
 ## Initialize and seed the local database
 
 ```powershell
+python -m alembic upgrade head
 python scripts/seed_data.py
 ```
 
@@ -32,7 +33,7 @@ Open `http://127.0.0.1:8000/docs` for interactive API documentation.
 ## Test and lint
 
 ```powershell
-pytest
+python -m pytest
 ruff check .
 ```
 

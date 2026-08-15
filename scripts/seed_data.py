@@ -5,7 +5,7 @@ import sys
 from sqlalchemy import select
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from app.db.database import Base, SessionLocal, engine
+from app.db.database import SessionLocal
 from app.db.models import Case, Court, CourtDocument, Party
 
 
@@ -19,7 +19,6 @@ def get_or_create_court(db, name: str, jurisdiction: str, external_id: str) -> C
 
 
 def seed() -> None:
-    Base.metadata.create_all(bind=engine)
     with SessionLocal() as db:
         coastal = get_or_create_court(db, "Coastal County Civil Court", "Synthetic Coastal County", "SYN-COURT-001")
         harbor = get_or_create_court(db, "Harbor District Commercial Court", "Synthetic Harbor District", "SYN-COURT-002")
