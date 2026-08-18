@@ -1,12 +1,12 @@
 """Read-only routes for the first project foundation."""
 
 from typing import Annotated
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, status as http_status
 from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload, selectinload
 from app.db.database import get_db
 from app.db.models import Case, Court, CourtDocument
-from app.schemas.court import CaseDetailRead, CaseListRead, CourtRead, DocumentRead
+from app.schemas.court import CaseCreate, CaseDetailRead, CaseListRead, CourtRead, DocumentRead
 
 router = APIRouter()
 DbSession = Annotated[Session, Depends(get_db)]
@@ -20,6 +20,27 @@ def health_check() -> dict[str, str]:
 @router.get("/courts", response_model=list[CourtRead])
 def list_courts(db: DbSession) -> list[Court]:
     return list(db.scalars(select(Court).order_by(Court.name)))
+
+@router.post(
+    "/cases",
+    response_model=CaseListRead,
+    status_code=http_status.HTTP_201_CREATED,
+)
+def create_case(case_data: CaseCreate, db: DbSession) -> Case:
+    if db.get(Court, case_data.court_id) is None:
+        raise HTTPException(status_code=404, detail="Court not found")
+
+    if db.scalar(select(Case).where(Case.case_number == case_data.case_number)):
+        raise HTTPException(status_code=409, detail="Case number already exists")
+
+    if db.scalar(select(Case).where(Case.external_id == case_data.external_id)):
+        raise HTTPException(status_code=409, detail="Case external ID already exists")
+
+    case = Case(**case_data.model_dump())
+    db.add(case)
+    db.commit()
+    db.refresh(case)
+    return case
 
 
 @router.get("/cases", response_model=list[CaseListRead])

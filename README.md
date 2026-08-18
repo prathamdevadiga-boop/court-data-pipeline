@@ -44,6 +44,7 @@ ruff check .
 - `GET /cases?court_id=&status=&skip=&limit=`
 - `GET /cases/{case_id}`
 - `GET /cases/{case_id}/documents`
+- `POST /cases`
 
 ## Current limitations
 

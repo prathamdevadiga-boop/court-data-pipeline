@@ -1,7 +1,9 @@
 """Pydantic v2 schemas returned by the API."""
 
 from datetime import date, datetime
+from typing import Literal
 from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class ORMModel(BaseModel):
@@ -31,6 +33,15 @@ class DocumentRead(ORMModel):
     source_url: str | None
     content_hash: str
     created_at: datetime
+
+
+class CaseCreate(BaseModel):
+    court_id: int = Field(gt=0)
+    case_number: str = Field(min_length=1, max_length=100)
+    title: str = Field(min_length=1, max_length=500)
+    filing_date: date
+    status: Literal["open", "pending", "closed"]
+    external_id: str = Field(min_length=1, max_length=100)
 
 
 class CaseListRead(ORMModel):

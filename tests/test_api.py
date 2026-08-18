@@ -65,3 +65,82 @@ def test_case_documents() -> None:
     response = client.get("/cases/1/documents")
     assert response.status_code == 200
     assert response.json()[0]["document_type"] == "Complaint"
+
+def test_create_case() -> None:
+    payload = {
+        "court_id": 1,
+        "case_number": "TEST-2026-2",
+        "title": "Gamma v. Delta",
+        "filing_date": "2026-02-01",
+        "status": "pending",
+        "external_id": "TEST-CASE-2",
+    }
+
+    response = client.post("/cases", json=payload)
+
+    assert response.status_code == 201
+    assert response.json()["case_number"] == "TEST-2026-2"
+    assert response.json()["status"] == "pending"
+
+
+def test_create_case_returns_404_for_missing_court() -> None:
+    payload = {
+        "court_id": 999,
+        "case_number": "TEST-2026-2",
+        "title": "Gamma v. Delta",
+        "filing_date": "2026-02-01",
+        "status": "open",
+        "external_id": "TEST-CASE-2",
+    }
+
+    response = client.post("/cases", json=payload)
+
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Court not found"
+
+
+def test_create_case_rejects_duplicate_case_number() -> None:
+    payload = {
+        "court_id": 1,
+        "case_number": "TEST-2026-1",
+        "title": "Gamma v. Delta",
+        "filing_date": "2026-02-01",
+        "status": "open",
+        "external_id": "TEST-CASE-2",
+    }
+
+    response = client.post("/cases", json=payload)
+
+    assert response.status_code == 409
+    assert response.json()["detail"] == "Case number already exists"
+
+
+def test_create_case_rejects_duplicate_external_id() -> None:
+    payload = {
+        "court_id": 1,
+        "case_number": "TEST-2026-2",
+        "title": "Gamma v. Delta",
+        "filing_date": "2026-02-01",
+        "status": "open",
+        "external_id": "TEST-CASE-1",
+    }
+
+    response = client.post("/cases", json=payload)
+
+    assert response.status_code == 409
+    assert response.json()["detail"] == "Case external ID already exists"
+
+
+def test_create_case_rejects_invalid_status() -> None:
+    payload = {
+        "court_id": 1,
+        "case_number": "TEST-2026-2",
+        "title": "Gamma v. Delta",
+        "filing_date": "2026-02-01",
+        "status": "archived",
+        "external_id": "TEST-CASE-2",
+    }
+
+    response = client.post("/cases", json=payload)
+
+    assert response.status_code == 422
